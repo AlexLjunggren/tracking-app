@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  web:
+    image: tracking-app:${BUILD_NUMBER}
+    networks:
+      - traefik-public
+    ports:
+      - 8181:3000
+    configs:
+      - source: tracking-app.json
+        target: /usr/src/app/src/properties/tracking-app.json
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      update_config:
+        order: start-first
+        failure_action: rollback
+        parallelism: 1
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.tracking-app-http.rule=Host(`tracking.${DOMAIN?Variable not set}`)
+        - traefik.http.routers.tracking-app-http.entrypoints=web
+        - traefik.http.routers.tracking-app-http.middlewares=https-redirect
+        - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+        - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+        - traefik.http.routers.tracking-app-https.rule=Host(`tracking.${DOMAIN?Variable not set}`)
+        - traefik.http.routers.tracking-app-https.entrypoints=websecure
+        - traefik.http.routers.tracking-app-https.tls=true
+        - traefik.http.routers.tracking-app-https.tls.certresolver=ljunggrenResolver
+        - traefik.http.services.tracking-app.loadbalancer.server.port=8080
+        - traefik.http.services.tracking-app.loadbalancer.server.scheme=http
+    environment:
+      - TZ=America/New_York
+
+networks:
+  traefik-public:
+    external: true
+
+configs:
+  tracking-app.json:
+    external: true
