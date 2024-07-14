@@ -1,6 +1,6 @@
 const getDomain =() => {
     const properties = require('../properties/tracking-app.json');
-    return properties.domain;
+    return properties.apiDomain;
 };
 
 
