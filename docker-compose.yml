@@ -32,7 +32,7 @@ services:
         - traefik.http.routers.tracking-app-https.entrypoints=websecure
         - traefik.http.routers.tracking-app-https.tls=true
         - traefik.http.routers.tracking-app-https.tls.certresolver=ljunggrenResolver
-        - traefik.http.services.tracking-app.loadbalancer.server.port=8080
+        - traefik.http.services.tracking-app.loadbalancer.server.port=3000
         - traefik.http.services.tracking-app.loadbalancer.server.scheme=http
     environment:
       - TZ=America/New_York

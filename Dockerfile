@@ -2,7 +2,7 @@ FROM node:18.17.1
 
 WORKDIR /usr/src/app
 
-COPY ./app /usr/src/app
+COPY ./tracking-app /usr/src/app
 
 RUN chmod +x -R /usr/src/app
 
