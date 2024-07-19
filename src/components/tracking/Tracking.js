@@ -90,7 +90,7 @@ export class Tracking extends React.Component {
                     </FloatingLabel>
                     <FloatingLabel
                         controlId="floatingInput"
-                        label="Tracing Number"
+                        label="Tracking Number"
                         className="mb-3"
                     >
                         <Form.Control 
