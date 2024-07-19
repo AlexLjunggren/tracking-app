@@ -1,3 +1,4 @@
+import './Dashboard.css';
 import { Tab } from 'bootstrap';
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
@@ -69,7 +70,7 @@ export class Dashboard extends React.Component {
 
     render() {
         return (
-            <div>
+            <div className='dashboard'>
                 <Alerts 
                     successes={this.state.alertSuccesses}
                     infos={this.state.alertInfos}
