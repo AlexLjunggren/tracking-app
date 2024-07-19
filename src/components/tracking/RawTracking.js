@@ -85,7 +85,6 @@ export class RawTracking extends React.Component {
                             <option value='FEDEX'>Fedex</option>
                             <option value='UPS'>UPS</option>
                             <option value='DHL'>DHL</option>
-                            <option value='USPS'>Postal</option>
                             <option value='AUTO'>Auto Detect (BETA)</option>
                         </Form.Select>
                     </FloatingLabel>

@@ -92,7 +92,6 @@ export class BatchTracking extends React.Component {
                             <option value='FEDEX'>Fedex</option>
                             <option value='UPS'>UPS</option>
                             <option value='DHL'>DHL</option>
-                            <option value='USPS'>Postal</option>
                         </Form.Select>
                     </FloatingLabel>
                     <FloatingLabel

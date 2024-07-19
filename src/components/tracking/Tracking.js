@@ -51,6 +51,7 @@ export class Tracking extends React.Component {
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
             this.setProcessiong(false);
+            console.log(json);
             switch(status) {
                 case 200: 
                     this.setResponse(json);
@@ -85,7 +86,6 @@ export class Tracking extends React.Component {
                             <option value='FEDEX'>Fedex</option>
                             <option value='UPS'>UPS</option>
                             <option value='DHL'>DHL</option>
-                            <option value='USPS'>Postal</option>
                         </Form.Select>
                     </FloatingLabel>
                     <FloatingLabel
