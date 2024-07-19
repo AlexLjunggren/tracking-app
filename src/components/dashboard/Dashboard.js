@@ -24,7 +24,7 @@ export class Dashboard extends React.Component {
     }
 
     getAnnouncements = () => {
-        const path = '/api/announcement';
+        const path = '/api/announcements';
         APIUtils.get(path).then(({status, json}) => {
             switch(status) {
                 case 200: 
