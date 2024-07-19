@@ -3,6 +3,12 @@ const getDomain =() => {
     return properties.apiDomain;
 };
 
+export const get = async (path) => {
+    const response = await fetch(getDomain() + path, {
+        method: 'GET'
+    });
+    return await process(response);
+};
 
 export const postFormData = async (path, data) => {
     const response = await fetch(getDomain() + path, {

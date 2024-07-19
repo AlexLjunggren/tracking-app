@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
-import { FloatingLabel, Form, Spinner } from 'react-bootstrap';
-import { ResponseTable } from '../response/ResponseTable';
+import { FileParser } from '../fileParser/FileParser';
+import { Alert, FloatingLabel, Form } from 'react-bootstrap';
 import { Submit } from '../buttons/Submit';
 
-export class Tracking extends React.Component {
+export class BatchTracking extends React.Component {
 
     constructor(props) {
         super(props);
         this.handleServiceChange.bind(this);
+        this.handleEmailChange.bind(this);
         this.handleTrackingNumberChange.bind(this);
         this.handleSubmit.bind(this);
         this.state = {
             service: '',
-            trackingNumber: '',
-            response: null,
+            email: '',
+            trackingNumbers: [],
+            processing: false,
         };
     }
 
@@ -22,8 +24,17 @@ export class Tracking extends React.Component {
         this.setState({service: event.target.value});
     }
 
-    handleTrackingNumberChange = (event) => {
-        this.setState({trackingNumber: event.target.value});
+    handleEmailChange = event => {
+        this.setState({email: event.target.value});
+    }
+
+    setTrackingNumbers = trackingNumbers => {
+        this.setState({trackingNumbers: trackingNumbers});
+    };
+
+    handleTrackingNumberChange = event => {
+        let trackingNumbers = event.target.value.split('\n');
+        this.setState({trackingNumbers: trackingNumbers});
     }
 
     clearAlerts = () => {
@@ -34,26 +45,22 @@ export class Tracking extends React.Component {
         this.setState({processing: processing});
     }
 
-    setResponse = (json) => {
-        this.setState({response: json});
-    }
-
     handleSubmit = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.setResponse(null);
         this.clearAlerts();
         this.setProcessiong(true);
-        const path = '/api/tracking';
+        const path = '/api/tracking/batch';
         const data = JSON.stringify({
-            trackingNumber: this.state.trackingNumber,
+            trackingNumbers: this.state.trackingNumbers,
+            email: this.state.email,
             service: this.state.service,
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
             this.setProcessiong(false);
             switch(status) {
-                case 200: 
-                    this.setResponse(json);
+                case 204: 
+                    this.props.addSuccess('Request submitted. You will receive an email once processing is complete');
                     break;
                 case 400:
                     this.props.addWarning(json);
@@ -67,7 +74,7 @@ export class Tracking extends React.Component {
         });
     }
     
-   render() {
+    render() {
         return (
             <div>
                 <Form onSubmit={this.handleSubmit}>
@@ -90,18 +97,38 @@ export class Tracking extends React.Component {
                     </FloatingLabel>
                     <FloatingLabel
                         controlId="floatingInput"
-                        label="Tracing Number"
+                        label="Email address"
                         className="mb-3"
                     >
                         <Form.Control 
-                            type="text" 
-                            onChange={this.handleTrackingNumberChange}
-                            placeholder="Tracking Number" 
+                            type="email" 
+                            onChange={this.handleEmailChange}
+                            placeholder="name@example.com" 
                             required 
                         />
                     </FloatingLabel>
+                    <FileParser 
+                        setTrackingNumbers={this.setTrackingNumbers} 
+                        addWarning={this.props.addWarning}
+                        addError={this.props.addError}
+                        clearAlerts={this.props.clearAlerts}
+                    />
+                    <FloatingLabel
+                        controlId="floatingTextarea"
+                        label="Tracking Numbers"
+                        // className="mb-3"
+                    >
+                        <Form.Control 
+                            as="textarea" 
+                            placeholder='Tracking Numbers'
+                            value={this.state.trackingNumbers.join('\n')} 
+                            onChange={this.handleTrackingNumberChange}
+                            style={{ height: '250px' }}
+                            className="mb-3"
+                            required
+                            />
+                    </FloatingLabel>
                     <Submit processing={this.state.processing}/>
-                    <ResponseTable data={this.state.response} />
                 </Form>
             </div>
         );

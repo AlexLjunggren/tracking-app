@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
-import { FloatingLabel, Form, Spinner } from 'react-bootstrap';
-import { ResponseTable } from '../response/ResponseTable';
+import { FloatingLabel, Form } from 'react-bootstrap';
 import { Submit } from '../buttons/Submit';
 
-export class Tracking extends React.Component {
+export class RawTracking extends React.Component {
 
     constructor(props) {
         super(props);
@@ -14,7 +13,8 @@ export class Tracking extends React.Component {
         this.state = {
             service: '',
             trackingNumber: '',
-            response: null,
+            json: null,
+            processing: false,
         };
     }
 
@@ -34,17 +34,17 @@ export class Tracking extends React.Component {
         this.setState({processing: processing});
     }
 
-    setResponse = (json) => {
-        this.setState({response: json});
+    setJson = (json) => {
+        this.setState({json: json});
     }
 
     handleSubmit = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.setResponse(null);
         this.clearAlerts();
+        this.setJson(null);
         this.setProcessiong(true);
-        const path = '/api/tracking';
+        const path = '/api/tracking/raw';
         const data = JSON.stringify({
             trackingNumber: this.state.trackingNumber,
             service: this.state.service,
@@ -53,7 +53,7 @@ export class Tracking extends React.Component {
             this.setProcessiong(false);
             switch(status) {
                 case 200: 
-                    this.setResponse(json);
+                    this.setJson(json);
                     break;
                 case 400:
                     this.props.addWarning(json);
@@ -86,6 +86,7 @@ export class Tracking extends React.Component {
                             <option value='UPS'>UPS</option>
                             <option value='DHL'>DHL</option>
                             <option value='USPS'>Postal</option>
+                            <option value='AUTO'>Auto Detect (BETA)</option>
                         </Form.Select>
                     </FloatingLabel>
                     <FloatingLabel
@@ -101,7 +102,7 @@ export class Tracking extends React.Component {
                         />
                     </FloatingLabel>
                     <Submit processing={this.state.processing}/>
-                    <ResponseTable data={this.state.response} />
+                    <pre>{this.state.json ? JSON.stringify(this.state.json, null, 2) : ''}</pre> 
                 </Form>
             </div>
         );

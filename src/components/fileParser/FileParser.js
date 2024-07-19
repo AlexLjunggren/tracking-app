@@ -9,12 +9,19 @@ export class FileParser extends React.Component {
         this.handleChange.bind(this);
     }
 
+    clearAlerts = () => {
+        this.props.clearAlerts();
+    }
+
     handleChange = event => {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
         event.preventDefault();
-        this.props.clearMessages();
+        this.clearAlerts();
         const path = '/api/file/parse';
         const data = new FormData();
-        const file = event.target.files[0];
         data.append('file', file);
         APIUtils.postFormData(path, data).then(({status, json}) => {
             if (status === 200) {
