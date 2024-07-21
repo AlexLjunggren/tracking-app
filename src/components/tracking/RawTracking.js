@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
+import Info from '../info/Info'
 import { FloatingLabel, Form } from 'react-bootstrap';
-import { Submit } from '../buttons/Submit';
+import Submit from '../buttons/Submit';
 
 export class RawTracking extends React.Component {
 
@@ -101,7 +102,9 @@ export class RawTracking extends React.Component {
                         />
                     </FloatingLabel>
                     <Submit processing={this.state.processing}/>
-                    <pre>{this.state.json ? JSON.stringify(this.state.json, null, 2) : ''}</pre> 
+                    {this.state.json ? (
+                        <pre>{JSON.stringify(this.state.json, null, 2)}</pre>
+                    ) : null}
                 </Form>
             </div>
         );

@@ -1,16 +1,10 @@
 import './Header.css'
-import React, { useState } from 'react';
+import React from 'react';
 
 export class Header extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            alertSuccesses: [],
-            alertInfos: [],
-            alertWarnings: [],
-            alertErrors: [],
-        };
     }
 
     render() {

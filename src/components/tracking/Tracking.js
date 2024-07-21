@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import { FloatingLabel, Form, Spinner } from 'react-bootstrap';
 import { ResponseTable } from '../response/ResponseTable';
-import { Submit } from '../buttons/Submit';
+import Submit from '../buttons/Submit';
 
 export class Tracking extends React.Component {
 

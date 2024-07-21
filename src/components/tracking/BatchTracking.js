@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import './BatchTracking.css';
+import React from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import { FileParser } from '../fileParser/FileParser';
-import { Alert, FloatingLabel, Form } from 'react-bootstrap';
-import { Submit } from '../buttons/Submit';
+import { FloatingLabel, Form } from 'react-bootstrap';
+import Submit from '../buttons/Submit';
 
 export class BatchTracking extends React.Component {
 
@@ -28,14 +29,14 @@ export class BatchTracking extends React.Component {
         this.setState({email: event.target.value});
     }
 
-    setTrackingNumbers = trackingNumbers => {
-        this.setState({trackingNumbers: trackingNumbers});
-    };
-
     handleTrackingNumberChange = event => {
         let trackingNumbers = event.target.value.split('\n');
         this.setState({trackingNumbers: trackingNumbers});
     }
+
+    setTrackingNumbers = trackingNumbers => {
+        this.setState({trackingNumbers: trackingNumbers});
+    };
 
     clearAlerts = () => {
         this.props.clearAlerts();
@@ -97,13 +98,13 @@ export class BatchTracking extends React.Component {
                     <FloatingLabel
                         controlId="floatingInput"
                         label="Email address"
-                        className="mb-3"
                     >
                         <Form.Control 
                             type="email" 
                             onChange={this.handleEmailChange}
                             placeholder="name@example.com" 
                             required 
+                            className="mb-3"
                         />
                     </FloatingLabel>
                     <FileParser 
@@ -115,7 +116,6 @@ export class BatchTracking extends React.Component {
                     <FloatingLabel
                         controlId="floatingTextarea"
                         label="Tracking Numbers"
-                        // className="mb-3"
                     >
                         <Form.Control 
                             as="textarea" 

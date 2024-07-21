@@ -62,7 +62,7 @@ export class Dashboard extends React.Component {
     clearAlerts = () => {
         this.setState({
             alertSuccesses: [],
-            alertInfos: [],
+            // alertInfos: [],
             alertWarnings: [],
             alertErrors: [],
         });
