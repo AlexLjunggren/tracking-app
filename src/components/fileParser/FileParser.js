@@ -80,7 +80,7 @@ export class FileParser extends React.Component {
             return;
         }
         this.clearAlerts();
-        const path = '/api/file/parse/csv';
+        const path = '/api/file/parse';
         const data = new FormData();
         data.append('file', file);
         data.append('column', this.state.column);
