@@ -30,7 +30,7 @@ export class BatchTracking extends React.Component {
     }
 
     handleTrackingNumberChange = event => {
-        let trackingNumbers = event.target.value.split('\n');
+        let trackingNumbers = event.target.value.split('\n').map(trackingNumber => trackingNumber.trim());
         this.setState({trackingNumbers: trackingNumbers});
     }
 
