@@ -9,10 +9,13 @@ export class FileParser extends React.Component {
     constructor(props) {
         super(props);
         this.handleFileChange.bind(this);
+        this.handleSheetChange.bind(this);
         this.handleHeadersChange.bind(this);
         this.state = {
+            workbook: {},
+            sheets: [],
             headers: [],
-            data: [],
+            sheet: 0,
             column: 0,
         };
     }
@@ -30,16 +33,28 @@ export class FileParser extends React.Component {
     }
 
     setTrackingNumbers = () => {
-        let data = this.state.data.map((row) => row[this.state.column]);
+        const sheets = this.state.sheets;
+        if (sheets.length == 0) {
+            this.props.setTrackingNumbers([]);
+            return;
+        }
+        let data = sheets[this.state.sheet].rows.map((row) => row.cells[this.state.column].value);
         data = data.filter((value) => value && value.length)
             .filter(this.isUnique);
         this.props.setTrackingNumbers(data);
     }
 
+    setHeaders = () => {
+        let headers = this.state.sheets[this.state.sheet].headers.cells.map((cell) => cell.value);
+        this.setState({headers: headers});
+    }
+
     clearResults = () => {
         this.setState({
+            workbook: {},
+            sheets: [],
             headers: [],
-            data: [],
+            sheet: 0,
             column: 0,
         }, () => {
             this.setTrackingNumbers();
@@ -48,12 +63,25 @@ export class FileParser extends React.Component {
 
     parseResponse = json => {
         this.setState({
-            headers: json.headers,
-            data: json.data,
+            workbook: json,
+            sheets: json.sheets,
+            sheet: 0,
             column: 0,
         }, () => {
+            this.setHeaders();
             this.setTrackingNumbers();
         });
+    }
+
+    showSheets = () => {
+        const sheets = this.state.sheets;
+        if (!sheets) {
+            return false;
+        }
+        if (sheets.length <=1) {
+            return false;
+        }
+        return true;
     }
 
     showHeaders = () => {
@@ -65,6 +93,17 @@ export class FileParser extends React.Component {
             return false;
         }
         return true;
+    }
+
+    handleSheetChange = event => {
+        const sheet = event.target.value;
+        this.setState({
+            sheet: sheet,
+            column: 0,
+        }, () => {
+            this.setHeaders();
+            this.setTrackingNumbers();
+        });
     }
 
     handleHeadersChange = event => {
@@ -96,11 +135,34 @@ export class FileParser extends React.Component {
 
     render() {
         return <div>
-            <Form.Control 
-                type="file" 
-                onChange={this.handleFileChange} 
-                className="mb-3"
-            />
+            <div className="mb-3">
+                <Form.Control 
+                    type="file" 
+                    onChange={this.handleFileChange} 
+                />
+                <Info 
+                    label={'Accepted file types?'}
+                    tip={'Excel (xls, xlsx, csv)'}
+                />
+            </div>
+            {this.showSheets() ? (
+                <div className="mb-3">
+                <FloatingLabel
+                    controlId="floatingInput"
+                    label="Sheet"
+                >
+                    <Form.Select onChange={this.handleSheetChange} value={this.state.sheet}> 
+                        {this.state.sheets.map((sheet, i) => (
+                            <option key={i} value={i}>{sheet.name}</option>
+                        ))}
+                    </Form.Select>
+                </FloatingLabel>
+                <Info 
+                    label={'What is this?'}
+                    tip={'The file contained multiple sheets. Select the sheet containing the tracking numbers'}
+                />
+            </div>
+        ) : null}
             {this.showHeaders() ? (
                 <div className="mb-3">
                     <FloatingLabel
@@ -115,9 +177,8 @@ export class FileParser extends React.Component {
                     </FloatingLabel>
                     <Info 
                         label={'What is this?'}
-                        tip={'Don\'t see the data you are looking for? Try selecting a different column'}
-                        className={'fileParserInfo'}
-                    />
+                        tip={'The file contained multiple columns. Select the column containing the tracking numbers'}
+                   />
                 </div>
             ) : null}
         </div >
