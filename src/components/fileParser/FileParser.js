@@ -51,6 +51,7 @@ export class FileParser extends React.Component {
 
     clearResults = () => {
         this.setState({
+            processing: false,
             workbook: {},
             sheets: [],
             headers: [],
@@ -95,6 +96,10 @@ export class FileParser extends React.Component {
         return true;
     }
 
+    setProcessing = (processing) => {
+        this.setState({processing: processing});
+    }
+
     handleSheetChange = event => {
         const sheet = event.target.value;
         this.setState({
@@ -118,12 +123,14 @@ export class FileParser extends React.Component {
         if (!file) {
             return;
         }
+        this.setProcessing(true);
         this.clearAlerts();
         const path = '/api/file/parse';
         const data = new FormData();
         data.append('file', file);
         data.append('column', this.state.column);
         APIUtils.postFormData(path, data).then(({status, json}) => {
+            this.setProcessing(false);
             if (status === 200) {
                 this.parseResponse(json);
                 return;
@@ -138,11 +145,12 @@ export class FileParser extends React.Component {
             <div className="mb-3">
                 <Form.Control 
                     type="file" 
-                    onChange={this.handleFileChange} 
+                    onChange={this.handleFileChange}
+                    disabled={this.state.processing}
                 />
                 <Info 
                     label={'Accepted file types?'}
-                    tip={'Excel (xls, xlsx, csv)'}
+                    tip={'Excel (xlsx, csv)'}
                 />
             </div>
             {this.showSheets() ? (
