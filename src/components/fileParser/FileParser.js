@@ -2,7 +2,7 @@ import React from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import './FileParser.css';
 import Info from '../info/Info'
-import { FloatingLabel, Form } from 'react-bootstrap';
+import { FloatingLabel, Form, InputGroup, Spinner } from 'react-bootstrap';
 
 export class FileParser extends React.Component {
 
@@ -143,11 +143,23 @@ export class FileParser extends React.Component {
     render() {
         return <div>
             <div className="mb-3">
-                <Form.Control 
-                    type="file" 
-                    onChange={this.handleFileChange}
-                    disabled={this.state.processing}
-                />
+                <InputGroup>
+                    {this.state.processing ? (
+                        <InputGroup.Text>
+                            <Spinner
+                                animation="border"
+                                size="sm"
+                                variant="primary"
+                            />
+                        </InputGroup.Text>
+                    ) : null}
+                    <Form.Control 
+                        type="file" 
+                        onChange={this.handleFileChange}
+                        disabled={this.state.processing}
+                        placeholder='Place text'
+                    />
+                </InputGroup>
                 <Info 
                     label={'Accepted file types?'}
                     tip={'Excel (xlsx, csv)'}

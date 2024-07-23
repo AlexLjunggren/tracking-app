@@ -1,23 +1,19 @@
-import { Button, Spinner } from 'react-bootstrap';
+import { Button, InputGroup, Spinner } from 'react-bootstrap';
 
-export default function Submit({ buttonText, processingText, processing}) {
-
-    const getButtonText = () => {
-        return processing ?
-                processingText || 'Processing...' :
-                buttonText || 'Submit';
-    }
+export default function Submit({ buttonText, processing}) {
 
     return (
-        <Button type="submit" className="mb-3" >
+        <InputGroup className="mb-3">
             {processing ? (
-                <Spinner
-                    animation="border"
-                    size="sm"
-                    variant="light"
-                />
+                <InputGroup.Text>
+                    <Spinner
+                        animation="border"
+                        size="sm"
+                        variant="primary"
+                    />
+                </InputGroup.Text>
             ) : null}
-            {getButtonText()}
-        </Button>
+            <Button type="submit" disabled={processing}>{buttonText || 'Submit'}</Button>
+        </InputGroup>
     );
 }
