@@ -72,7 +72,6 @@ export class BatchTracking extends React.Component {
                 default:
                     this.props.addError(json);
             }
-            this.setTrackingNumbers([]);
         });
     }
     
