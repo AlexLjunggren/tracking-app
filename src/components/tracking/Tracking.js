@@ -51,7 +51,6 @@ export class Tracking extends React.Component {
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
             this.setProcessiong(false);
-            console.log(json);
             switch(status) {
                 case 200: 
                     this.setResponse(json);
