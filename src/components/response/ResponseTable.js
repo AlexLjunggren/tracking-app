@@ -18,7 +18,7 @@ export class ResponseTable extends React.Component {
     render() {
         if (this.props.data) {
             return (
-                <Table striped bordered hover>
+                <Table striped bordered hover responsive>
                     <tbody>
                     <tr>
                         <td>Service</td>
@@ -49,7 +49,7 @@ export class ResponseTable extends React.Component {
                     {this.props.data.link ? (
                         <tr>
                             <td>Link</td>
-                            <td><a href={this.props.data.link} target="_blank">{this.props.data.link}</a></td>
+                            <td><a href={this.props.data.link} target="_blank">Click here</a></td>
                         </tr>
                     ) : null}
                     </tbody>
