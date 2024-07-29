@@ -1,35 +1,29 @@
 import './Dashboard.css';
 import { Tab } from 'bootstrap';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import { Tabs } from 'react-bootstrap';
-import { Tracking } from '../tracking/Tracking';
-import { BatchTracking } from '../tracking/BatchTracking';
-import { RawTracking } from '../tracking/RawTracking';
-import { Alerts } from '../alerts/Alerts';
+import Tracking from '../tracking/Tracking';
+import BatchTracking from '../tracking/BatchTracking';
+import RawTracking from '../tracking/RawTracking';
+import Alerts from '../alerts/Alerts';
 
-export class Dashboard extends React.Component {
+export default function Dashboard() {
+    const [alertSuccesses, setAlertSuccesses] = useState([]);
+    const [alertInfos, setAlertInfos] = useState([]);
+    const [alertWarnings, setAlertWarnings] = useState([]);
+    const [alertErrors, setAlertErrors] = useState([]);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            alertSuccesses: [],
-            alertInfos: [],
-            alertWarnings: [],
-            alertErrors: [],
-        };
-    }
-
-    componentDidMount = () => {
-        this.getAnnouncements();
-    }
-
-    getAnnouncements = () => {
+    useEffect(() => {
+        getAnnouncements();
+    }, []);
+    
+    const getAnnouncements = () => {
         const path = '/api/announcements';
         APIUtils.get(path).then(({status, json}) => {
             switch(status) {
                 case 200: 
-                    json.map((message, i) => this.addInfo(message));
+                    json.map((message, i) => addInfo(message));
                     break;
                 case 400:
                     this.addWarning(json);
@@ -43,69 +37,65 @@ export class Dashboard extends React.Component {
         });
     }
 
-    addSuccess = success => {
-        this.setState({alertSuccesses: [...this.state.alertSuccesses, success]});
-    };
-
-    addInfo = info => {
-        this.setState({alertInfos: [...this.state.alertInfos, info]});
+    const addInfo = info => {
+        setAlertInfos(alertInfos => [...alertInfos, info]);
     }
 
-    addWarning = warning => {
-        this.setState({alertWarnings: [...this.state.alertWarnings, warning]});
+    const addSuccess = success => {
+        setAlertSuccesses(alertSuccesses => [...alertSuccesses, success]);
     };
 
-    addError = error => {
-        this.setState({alertErrors: [...this.state.alertErrors, error]});
+    const addWarning = warning => {
+        setAlertWarnings(alertWarnings => [...alertWarnings, warning]);
     };
 
-    clearAlerts = () => {
-        this.setState({
-            alertSuccesses: [],
-            // alertInfos: [],
-            alertWarnings: [],
-            alertErrors: [],
-        });
+    const addError = error => {
+        setAlertErrors(alertErrors => [...alertErrors, error]);
+    };
+
+    const clearAlerts = () => {
+        setAlertInfos([]);
+        setAlertSuccesses([]);
+        setAlertWarnings([]);
+        setAlertErrors([]);
     }
 
-    render() {
-        return (
-            <div className='dashboard'>
-                <Alerts 
-                    successes={this.state.alertSuccesses}
-                    infos={this.state.alertInfos}
-                    warnings={this.state.alertWarnings}
-                    errors={this.state.alertErrors}
-                />
-                <Tabs defaultActiveKey="batch"
-                    className="mb-3"
-                >
-                    <Tab eventKey="individual" title="Tracking">
-                        <Tracking 
-                            addSuccess={this.addSuccess}
-                            addWarning={this.addWarning}
-                            addError={this.addError}
-                            clearAlerts={this.clearAlerts}
-                        />
-                    </Tab>
-                    <Tab eventKey="batch" title="Batch">
-                        <BatchTracking 
-                            addSuccess={this.addSuccess}
-                            addWarning={this.addWarning}
-                            addError={this.addError}
-                            clearAlerts={this.clearAlerts}
-                        />
-                    </Tab>
-                    <Tab eventKey="raw" title="Raw">
-                        <RawTracking 
-                            addSuccess={this.addSuccess}
-                            addWarning={this.addWarning}
-                            addError={this.addError}
-                            clearAlerts={this.clearAlerts}
-                        />
-                    </Tab>
-                </Tabs>
-            </div>
-        );
-    }
+    return (
+        <div className='dashboard'>
+            <Alerts 
+                successes={alertSuccesses}
+                infos={alertInfos}
+                warnings={alertWarnings}
+                errors={alertErrors}
+            />
+            <Tabs defaultActiveKey="batch"
+                className="mb-3"
+            >
+                <Tab eventKey="individual" title="Tracking">
+                    <Tracking 
+                        addSuccess={addSuccess}
+                        addWarning={addWarning}
+                        addError={addError}
+                        clearAlerts={clearAlerts}
+                    />
+                </Tab>
+                <Tab eventKey="batch" title="Batch">
+                    <BatchTracking 
+                        addSuccess={addSuccess}
+                        addWarning={addWarning}
+                        addError={addError}
+                        clearAlerts={clearAlerts}
+                    />
+                </Tab>
+                <Tab eventKey="raw" title="Raw">
+                    <RawTracking 
+                        addSuccess={addSuccess}
+                        addWarning={addWarning}
+                        addError={addError}
+                        clearAlerts={clearAlerts}
+                    />
+                </Tab>
+            </Tabs>
+        </div>
+    );
 }

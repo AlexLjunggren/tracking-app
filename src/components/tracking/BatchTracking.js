@@ -1,135 +1,130 @@
 import './BatchTracking.css';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
-import { FileParser } from '../fileParser/FileParser';
-import { FloatingLabel, Form } from 'react-bootstrap';
+import FileParser from '../fileParser/FileParser';
+import { Button, FloatingLabel, Form, Stack } from 'react-bootstrap';
 import Submit from '../buttons/Submit';
 
-export class BatchTracking extends React.Component {
+export default function BatchTracking({ addSuccess, addWarning, addError, clearAlerts}) {
+    const [service, setService] = useState('');
+    const [email, setEmail] = useState('');
+    const [trackingNumbers, setTrackingNumbers] = useState([]);
+    const [processing, setProcessing] = useState(false);
+    const [fileParserKey, setFileParserKey] = useState(1);
 
-    constructor(props) {
-        super(props);
-        this.handleServiceChange.bind(this);
-        this.handleEmailChange.bind(this);
-        this.handleTrackingNumberChange.bind(this);
-        this.handleSubmit.bind(this);
-        this.state = {
-            service: '',
-            email: '',
-            trackingNumbers: [],
-            processing: false,
-        };
+    const handleServiceChange = event => {
+        setService(event.target.value);
     }
 
-    handleServiceChange = event => {
-        this.setState({service: event.target.value});
+    const handleEmailChange = event => {
+        setEmail(event.target.value);
     }
 
-    handleEmailChange = event => {
-        this.setState({email: event.target.value});
+    const handleTrackingNumberChange = event => {
+        let trackingNumbers = event.target.value.split('\n').map(trackingNumber => trackingNumber?.trim());
+        setTrackingNumbers(trackingNumbers);
     }
 
-    handleTrackingNumberChange = event => {
-        let trackingNumbers = event.target.value.split('\n').map(trackingNumber => trackingNumber.trim());
-        this.setState({trackingNumbers: trackingNumbers});
+    const handleReset = () => {
+        resetData();
+        clearAlerts();
     }
 
-    setTrackingNumbers = trackingNumbers => {
-        this.setState({trackingNumbers: trackingNumbers});
-    };
-
-    clearAlerts = () => {
-        this.props.clearAlerts();
+    const resetData = () => {
+        setService('');
+        setEmail('');
+        setTrackingNumbers([]);
+        setFileParserKey(fileParserKey * -1);
     }
 
-    setProcessiong = (processing) => {
-        this.setState({processing: processing});
-    }
-
-    handleSubmit = (event) => {
+    const handleSubmit = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.clearAlerts();
-        this.setProcessiong(true);
+        clearAlerts();
+        setProcessing(true);
         const path = '/api/tracking/batch';
         const data = JSON.stringify({
-            trackingNumbers: this.state.trackingNumbers,
-            email: this.state.email,
-            service: this.state.service,
+            trackingNumbers: trackingNumbers,
+            email: email,
+            service: service,
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
-            this.setProcessiong(false);
+            setProcessing(false);
             switch(status) {
                 case 204: 
-                    this.props.addSuccess('Request submitted. You will receive an email once processing is complete');
+                    addSuccess('Request submitted. You will receive an email once processing is complete');
+                    resetData();
                     break;
                 case 400:
-                    this.props.addWarning(json);
+                    addWarning(json);
                     break;
                 case 500:
-                    this.props.addError(json.message);
+                    addError(json.message);
                     break;
                 default:
-                    this.props.addError(json);
+                    addError(json);
             }
         });
     }
     
-    render() {
-        return (
-            <div>
-                <Form onSubmit={this.handleSubmit}>
-                    <FloatingLabel 
-                        controlId="floatingSelect" 
-                        label="Tracking Service" 
+    return (
+        <div>
+            <Form onSubmit={handleSubmit}>
+                <FloatingLabel 
+                    controlId="floatingSelect" 
+                    label="Tracking Service" 
+                    className="mb-3"
+                >
+                    <Form.Select 
+                        value={service}
+                        onChange={handleServiceChange}
+                        required
+                    >
+                        <option value='' hidden>Select Tracking Service</option>
+                        <option value='FEDEX'>Fedex</option>
+                        <option value='UPS'>UPS</option>
+                        <option value='DHL'>DHL</option>
+                    </Form.Select>
+                </FloatingLabel>
+                <FloatingLabel
+                    controlId="floatingInput"
+                    label="Email address"
+                >
+                    <Form.Control 
+                        type="email" 
+                        onChange={handleEmailChange}
+                        placeholder="name@example.com" 
+                        value={email}
+                        required 
                         className="mb-3"
-                    >
-                        <Form.Select 
-                            value={this.state.service}
-                            onChange={this.handleServiceChange}
-                            required
-                        >
-                            <option value='' hidden>Select Tracking Service</option>
-                            <option value='FEDEX'>Fedex</option>
-                            <option value='UPS'>UPS</option>
-                            <option value='DHL'>DHL</option>
-                        </Form.Select>
-                    </FloatingLabel>
-                    <FloatingLabel
-                        controlId="floatingInput"
-                        label="Email address"
-                    >
-                        <Form.Control 
-                            type="email" 
-                            onChange={this.handleEmailChange}
-                            placeholder="name@example.com" 
-                            required 
-                            className="mb-3"
-                        />
-                    </FloatingLabel>
-                    <FileParser 
-                        setTrackingNumbers={this.setTrackingNumbers} 
-                        addWarning={this.props.addWarning}
-                        addError={this.props.addError}
-                        clearAlerts={this.props.clearAlerts}
                     />
-                    <FloatingLabel
-                        controlId="floatingTextarea"
-                        label="Tracking Numbers"
-                    >
-                        <Form.Control 
-                            as="textarea" 
-                            placeholder='Tracking Numbers'
-                            value={this.state.trackingNumbers.join('\n')} 
-                            onChange={this.handleTrackingNumberChange}
-                            style={{ height: '250px' }}
-                            className="mb-3"
-                            required
-                            />
-                    </FloatingLabel>
-                    <Submit processing={this.state.processing}/>
-                </Form>
-            </div>
-        );
-    }
+                </FloatingLabel>
+                <FileParser 
+                    key={fileParserKey}
+                    setTrackingNumbers={setTrackingNumbers} 
+                    addWarning={addWarning}
+                    addError={addError}
+                    clearAlerts={clearAlerts}
+                />
+                <FloatingLabel
+                    controlId="floatingTextarea"
+                    label="Tracking Numbers"
+                >
+                    <Form.Control 
+                        as="textarea" 
+                        placeholder='Tracking Numbers'
+                        value={trackingNumbers.join('\n')} 
+                        onChange={handleTrackingNumberChange}
+                        style={{ height: '250px' }}
+                        className="mb-3"
+                        required
+                        />
+                </FloatingLabel>
+                <Stack direction="horizontal" gap={2} className="mb-3">
+                    <Submit processing={processing}/>
+                    <Button variant="outline-secondary" onClick={handleReset}>Reset</Button>
+                </Stack>
+            </Form>
+        </div>
+    )
 }

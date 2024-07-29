@@ -1,9 +1,10 @@
+import './Submit.css'
 import { Button, InputGroup, Spinner } from 'react-bootstrap';
 
-export default function Submit({ buttonText, processing}) {
+export default function Submit({ buttonText, processing }) {
 
     return (
-        <InputGroup className="mb-3">
+        <InputGroup className='submit-input-group'>
             {processing ? (
                 <InputGroup.Text>
                     <Spinner

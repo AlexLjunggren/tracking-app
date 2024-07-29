@@ -1,81 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect, useImperativeHandle } from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import './FileParser.css';
 import Info from '../info/Info'
 import { FloatingLabel, Form, InputGroup, Spinner } from 'react-bootstrap';
 
-export class FileParser extends React.Component {
+export default function FileParser({ setTrackingNumbers, clearAlerts, addWarning, addError }) {
+    const [headers, setHeaders] = useState([]);
+    const [sheets, setSheets] = useState([]);
+    const [sheet, setSheet] = useState(0);
+    const [column, setColumn] = useState(0);
+    const [processing, setProcessing] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.handleFileChange.bind(this);
-        this.handleSheetChange.bind(this);
-        this.handleHeadersChange.bind(this);
-        this.state = {
-            workbook: {},
-            sheets: [],
-            headers: [],
-            sheet: 0,
-            column: 0,
-        };
-    }
-
-    clearAlerts = () => {
-        this.props.clearAlerts();
-    }
-
-    setHeaders = headers => {
-        this.setState({headers: headers});
-    }
-
-    isUnique = (value, index, array) => {
+    const isUnique = (value, index, array) => {
         return array.indexOf(value) === index;
     }
 
-    setTrackingNumbers = () => {
-        const sheets = this.state.sheets;
+    const parseTrackingNumbers = (sheets, sheet, column) => {
         if (sheets.length == 0) {
-            this.props.setTrackingNumbers([]);
+            setTrackingNumbers([]);
             return;
         }
-        let data = sheets[this.state.sheet].rows.map((row) => row.cells[this.state.column].value);
+        let data = sheets[sheet].rows.map((row) => row.cells[column].value?.trim());
         data = data.filter((value) => value && value.length)
-            .filter(this.isUnique);
-        this.props.setTrackingNumbers(data);
+            .filter(isUnique);
+        setTrackingNumbers(data);
     }
 
-    setHeaders = () => {
-        let headers = this.state.sheets[this.state.sheet].headers.cells.map((cell) => cell.value);
-        this.setState({headers: headers});
+    const parseHeaders = (sheets, sheet) => {
+        let headers = sheets[sheet].headers.cells.map((cell) => cell.value?.trim());
+        setHeaders(headers);
     }
 
-    clearResults = () => {
-        this.setState({
-            processing: false,
-            workbook: {},
-            sheets: [],
-            headers: [],
-            sheet: 0,
-            column: 0,
-        }, () => {
-            this.setTrackingNumbers();
-        });
+    const parseResponse = json => {
+        setSheets(json.sheets);
+        setSheet(0);
+        setColumn(0);
+        parseHeaders(json.sheets, 0);
+        parseTrackingNumbers(json.sheets, 0, 0);
     }
 
-    parseResponse = json => {
-        this.setState({
-            workbook: json,
-            sheets: json.sheets,
-            sheet: 0,
-            column: 0,
-        }, () => {
-            this.setHeaders();
-            this.setTrackingNumbers();
-        });
-    }
-
-    showSheets = () => {
-        const sheets = this.state.sheets;
+    const showSheets = () => {
         if (!sheets) {
             return false;
         }
@@ -85,8 +49,7 @@ export class FileParser extends React.Component {
         return true;
     }
 
-    showHeaders = () => {
-        const headers = this.state.headers;
+    const showHeaders = () => {
         if (!headers) {
             return false;
         }
@@ -96,55 +59,53 @@ export class FileParser extends React.Component {
         return true;
     }
 
-    setProcessing = (processing) => {
-        this.setState({processing: processing});
-    }
-
-    handleSheetChange = event => {
+    const handleSheetChange = event => {
         const sheet = event.target.value;
-        this.setState({
-            sheet: sheet,
-            column: 0,
-        }, () => {
-            this.setHeaders();
-            this.setTrackingNumbers();
-        });
+        setSheet(sheet);
+        setColumn(0);
+        parseHeaders(sheets, sheet);
+        parseTrackingNumbers(sheets, sheet, 0);
     }
 
-    handleHeadersChange = event => {
+    const handleHeadersChange = event => {
         const column = event.target.value;
-        this.setState({column: column}, () => {
-            this.setTrackingNumbers();
-        });
+        setColumn(column);
+        parseTrackingNumbers(sheets, sheet, column);
     }
 
-    handleFileChange = event => {
+    const handleFileChange = event => {
         const file = event.target.files[0];
         if (!file) {
             return;
         }
-        this.setProcessing(true);
-        this.clearAlerts();
+        setProcessing(true);
+        clearAlerts();
         const path = '/api/file/parse';
         const data = new FormData();
         data.append('file', file);
-        data.append('column', this.state.column);
         APIUtils.postFormData(path, data).then(({status, json}) => {
-            this.setProcessing(false);
-            if (status === 200) {
-                this.parseResponse(json);
-                return;
+            setProcessing(false);
+            switch(status) {
+            case 200:
+                parseResponse(json);
+                break;
+            case 400:
+                addWarning(json.message);
+                break;
+            case 500:
+                addError(json.message);
+                break;
+            default:
+                addError(json);
             }
-            this.clearResults();
-            this.props.addError(json.message);
         });
     }
 
-    render() {
-        return <div>
+    return (
+        <div>
             <div className="mb-3">
                 <InputGroup>
-                    {this.state.processing ? (
+                    {processing ? (
                         <InputGroup.Text>
                             <Spinner
                                 animation="border"
@@ -155,8 +116,8 @@ export class FileParser extends React.Component {
                     ) : null}
                     <Form.Control 
                         type="file" 
-                        onChange={this.handleFileChange}
-                        disabled={this.state.processing}
+                        onChange={handleFileChange}
+                        disabled={processing}
                         placeholder='Place text'
                     />
                 </InputGroup>
@@ -165,14 +126,15 @@ export class FileParser extends React.Component {
                     tip={'Excel (xlsx, csv)'}
                 />
             </div>
-            {this.showSheets() ? (
+            {showSheets() ? (
                 <div className="mb-3">
                 <FloatingLabel
                     controlId="floatingInput"
                     label="Sheet"
                 >
-                    <Form.Select onChange={this.handleSheetChange} value={this.state.sheet}> 
-                        {this.state.sheets.map((sheet, i) => (
+                    <Form.Select onChange={handleSheetChange} 
+                        value={sheet}> 
+                        {sheets.map((sheet, i) => (
                             <option key={i} value={i}>{sheet.name}</option>
                         ))}
                     </Form.Select>
@@ -183,14 +145,14 @@ export class FileParser extends React.Component {
                 />
             </div>
         ) : null}
-            {this.showHeaders() ? (
+            {showHeaders() ? (
                 <div className="mb-3">
                     <FloatingLabel
                         controlId="floatingInput"
                         label="Column"
                     >
-                        <Form.Select onChange={this.handleHeadersChange} value={this.state.column}> 
-                            {this.state.headers.map((header, i) => (
+                        <Form.Select onChange={handleHeadersChange} value={column}> 
+                            {headers.map((header, i) => (
                                 <option key={i} value={i}>{header}</option>
                             ))}
                         </Form.Select>
@@ -202,5 +164,5 @@ export class FileParser extends React.Component {
                 </div>
             ) : null}
         </div >
-    }
+    )
 }

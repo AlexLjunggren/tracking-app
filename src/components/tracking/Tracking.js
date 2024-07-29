@@ -1,108 +1,97 @@
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
-import { FloatingLabel, Form, Spinner } from 'react-bootstrap';
-import { ResponseTable } from '../response/ResponseTable';
+import { Button, FloatingLabel, Form, Stack } from 'react-bootstrap';
+import ResponseTable from '../response/ResponseTable';
 import Submit from '../buttons/Submit';
 
-export class Tracking extends React.Component {
+export default function Tracking({ addWarning, addError, clearAlerts}) {
+    const [service, setService] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
+    const [response, setResponse] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.handleServiceChange.bind(this);
-        this.handleTrackingNumberChange.bind(this);
-        this.handleSubmit.bind(this);
-        this.state = {
-            service: '',
-            trackingNumber: '',
-            response: null,
-        };
+    const handleServiceChange = event => {
+        setService(event.target.value);
     }
 
-    handleServiceChange = event => {
-        this.setState({service: event.target.value});
+    const handleTrackingNumberChange = (event) => {
+        setTrackingNumber(event.target.value);
     }
 
-    handleTrackingNumberChange = (event) => {
-        this.setState({trackingNumber: event.target.value});
+    const handleReset = () => {
+        setService('');
+        setTrackingNumber('');
+        setResponse(null);
+        clearAlerts();
     }
 
-    clearAlerts = () => {
-        this.props.clearAlerts();
-    }
-
-    setProcessiong = (processing) => {
-        this.setState({processing: processing});
-    }
-
-    setResponse = (json) => {
-        this.setState({response: json});
-    }
-
-    handleSubmit = (event) => {
+    const handleSubmit = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.setResponse(null);
-        this.clearAlerts();
-        this.setProcessiong(true);
+        clearAlerts();
+        setResponse(null);
+        setProcessing(true);
         const path = '/api/tracking';
         const data = JSON.stringify({
-            trackingNumber: this.state.trackingNumber,
-            service: this.state.service,
+            trackingNumber: trackingNumber,
+            service: service,
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
-            this.setProcessiong(false);
+            setProcessing(false);
             switch(status) {
                 case 200: 
-                    this.setResponse(json);
+                    setResponse(json);
                     break;
                 case 400:
-                    this.props.addWarning(json);
+                    addWarning(json);
                     break;
                 case 500:
-                    this.props.addError(json.message);
+                    addError(json.message);
                     break;
                 default:
-                    this.props.addError(json);
+                    addError(json);
             }
         });
     }
     
-   render() {
-        return (
-            <div>
-                <Form onSubmit={this.handleSubmit}>
-                    <FloatingLabel 
-                        controlId="floatingSelect" 
-                        label="Tracking Service" 
-                        className="mb-3"
+    return (
+        <div>
+            <Form onSubmit={handleSubmit}>
+                <FloatingLabel 
+                    controlId="floatingSelect" 
+                    label="Tracking Service" 
+                    className="mb-3"
+                >
+                    <Form.Select 
+                        value={service}
+                        onChange={handleServiceChange}
+                        required
                     >
-                        <Form.Select 
-                            value={this.state.service}
-                            onChange={this.handleServiceChange}
-                            required
-                        >
-                            <option value='' hidden>Select Tracking Service</option>
-                            <option value='FEDEX'>Fedex</option>
-                            <option value='UPS'>UPS</option>
-                            <option value='DHL'>DHL</option>
-                        </Form.Select>
-                    </FloatingLabel>
-                    <FloatingLabel
-                        controlId="floatingInput"
-                        label="Tracking Number"
-                        className="mb-3"
-                    >
-                        <Form.Control 
-                            type="text" 
-                            onChange={this.handleTrackingNumberChange}
-                            placeholder="Tracking Number" 
-                            required 
-                        />
-                    </FloatingLabel>
-                    <Submit processing={this.state.processing}/>
-                    <ResponseTable data={this.state.response} />
-                </Form>
-            </div>
-        );
-    }
+                        <option value='' hidden>Select Tracking Service</option>
+                        <option value='FEDEX'>Fedex</option>
+                        <option value='UPS'>UPS</option>
+                        <option value='DHL'>DHL</option>
+                    </Form.Select>
+                </FloatingLabel>
+                <FloatingLabel
+                    controlId="floatingInput"
+                    label="Tracking Number"
+                    className="mb-3"
+                >
+                    <Form.Control 
+                        type="text" 
+                        value={trackingNumber}
+                        onChange={handleTrackingNumberChange}
+                        placeholder="Tracking Number" 
+                        required 
+                    />
+                </FloatingLabel>
+                <Stack direction="horizontal" gap={2} className="mb-3">
+                    <Submit processing={processing}/>
+                    <Button variant="outline-secondary" onClick={handleReset}>Reset</Button>
+                </Stack>
+                <ResponseTable data={response} />
+            </Form>
+        </div>
+    );
 }

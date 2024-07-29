@@ -1,112 +1,106 @@
 import React, { useState } from 'react';
 import * as APIUtils from '../../api/APIUtils';
 import Info from '../info/Info'
-import { FloatingLabel, Form } from 'react-bootstrap';
+import { Button, FloatingLabel, Form, Stack } from 'react-bootstrap';
 import Submit from '../buttons/Submit';
 
-export class RawTracking extends React.Component {
+export default function RawTracking({ addWarning, addError, clearAlerts}) {
+    const [service, setService] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
+    const [json, setJson] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.handleServiceChange.bind(this);
-        this.handleTrackingNumberChange.bind(this);
-        this.handleSubmit.bind(this);
-        this.state = {
-            service: '',
-            trackingNumber: '',
-            json: null,
-            processing: false,
-        };
+    const handleServiceChange = event => {
+        setService(event.target.value);
     }
 
-    handleServiceChange = event => {
-        this.setState({service: event.target.value});
+    const handleTrackingNumberChange = (event) => {
+        setTrackingNumber(event.target.value);
     }
 
-    handleTrackingNumberChange = (event) => {
-        this.setState({trackingNumber: event.target.value});
+    const handleReset = () => {
+        setService('');
+        setTrackingNumber('');
+        setJson(null);
+        clearAlerts();
     }
 
-    clearAlerts = () => {
-        this.props.clearAlerts();
-    }
-
-    setProcessiong = (processing) => {
-        this.setState({processing: processing});
-    }
-
-    setJson = (json) => {
-        this.setState({json: json});
-    }
-
-    handleSubmit = (event) => {
+    const handleSubmit = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.clearAlerts();
-        this.setJson(null);
-        this.setProcessiong(true);
+        clearAlerts();
+        setJson(null);
+        setProcessing(true);
         const path = '/api/tracking/raw';
         const data = JSON.stringify({
-            trackingNumber: this.state.trackingNumber,
-            service: this.state.service,
+            trackingNumber: trackingNumber,
+            service: service,
         });
         APIUtils.postJSON(path, data).then(({status, json}) => {
-            this.setProcessiong(false);
+            setProcessing(false);
             switch(status) {
                 case 200: 
-                    this.setJson(json);
+                    setJson(json);
                     break;
                 case 400:
-                    this.props.addWarning(json);
+                    addWarning(json);
                     break;
                 case 500:
-                    this.props.addError(json.message);
+                    addError(json.message);
                     break;
                 default:
-                    this.props.addError(json);
+                    addError(json);
             }
         });
     }
     
-   render() {
-        return (
-            <div>
-                <Form onSubmit={this.handleSubmit}>
-                    <FloatingLabel 
-                        controlId="floatingSelect" 
-                        label="Tracking Service" 
-                        className="mb-3"
+    return (
+        <div>
+            <Form onSubmit={handleSubmit}>
+                <FloatingLabel 
+                    controlId="floatingSelect" 
+                    label="Tracking Service" 
+                    className="mb-3"
+                >
+                    <Form.Select 
+                        value={service}
+                        onChange={handleServiceChange}
+                        required
                     >
-                        <Form.Select 
-                            value={this.state.service}
-                            onChange={this.handleServiceChange}
-                            required
-                        >
-                            <option value='' hidden>Select Tracking Service</option>
-                            <option value='FEDEX'>Fedex</option>
-                            <option value='UPS'>UPS</option>
-                            <option value='DHL'>DHL</option>
-                            <option value='AUTO'>Auto Detect (BETA)</option>
-                        </Form.Select>
-                    </FloatingLabel>
-                    <FloatingLabel
-                        controlId="floatingInput"
-                        label="Tracking Number"
-                        className="mb-3"
-                    >
-                        <Form.Control 
-                            type="text" 
-                            onChange={this.handleTrackingNumberChange}
-                            placeholder="Tracking Number" 
-                            required 
+                        <option value='' hidden>Select Tracking Service</option>
+                        <option value='FEDEX'>Fedex</option>
+                        <option value='UPS'>UPS</option>
+                        <option value='DHL'>DHL</option>
+                        <option value='AUTO'>Auto Detect (BETA)</option>
+                    </Form.Select>
+                    {service === 'AUTO' ? (
+                        <Info 
+                            label={'What is Auto Detect (BETA)?'}
+                            tip={'The application will attempt to identify the tracking service based on the tracking number'}
                         />
-                    </FloatingLabel>
-                    <Submit processing={this.state.processing}/>
-                    {this.state.json ? (
-                        <pre>{JSON.stringify(this.state.json, null, 2)}</pre>
                     ) : null}
-                </Form>
-            </div>
-        );
-    }
+                </FloatingLabel>
+                <FloatingLabel
+                    controlId="floatingInput"
+                    label="Tracking Number"
+                    className="mb-3"
+                >
+                    <Form.Control 
+                        type="text" 
+                        value={trackingNumber}
+                        onChange={handleTrackingNumberChange}
+                        placeholder="Tracking Number" 
+                        required 
+                    />
+                </FloatingLabel>
+                <Stack direction="horizontal" gap={2} className="mb-3">
+                    <Submit processing={processing}/>
+                    <Button variant="outline-secondary" onClick={handleReset}>Reset</Button>
+                </Stack>
+                {json ? (
+                    <pre>{JSON.stringify(json, null, 2)}</pre>
+                ) : null}
+            </Form>
+        </div>
+    );
 }
